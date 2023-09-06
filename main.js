@@ -21,18 +21,13 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 camera.position.setZ(30);
 
 renderer.render(scene, camera);
-const glbURL =
-  "https://64f85f827ff7e36e1aae7626--playful-salamander-1d8523.netlify.app/ ";
 
 const loader = new GLTFLoader();
 let headphone;
 
 loader.load(
-  // "/assets/headphone/headphone.glb",
   "/dist/assets/headphone/headphonemodel.glb",
-  // glbURL,
   function (gltf) {
-    console.log(gltf, "<<<  glb");
     headphone = gltf.scene;
     scene.add(headphone);
 
@@ -49,6 +44,62 @@ loader.load(
     console.error(error);
   }
 );
+const group = new THREE.Group();
+scene.add(group);
+
+const labels = [];
+const lines = [];
+
+function createLabelAndLine(text, color, position, direction) {
+  const labelCanvas = document.createElement("canvas");
+  const context = labelCanvas.getContext("2d");
+  context.font = "Bold 24px Arial";
+  context.fillStyle = "white";
+  context.fillText(text, 0, 24);
+  const labelTexture = new THREE.CanvasTexture(labelCanvas);
+
+  const labelMaterial = new THREE.SpriteMaterial({ map: labelTexture });
+  const labelSprite = new THREE.Sprite(labelMaterial);
+  labelSprite.scale.set(1.5, 1, 2);
+  labelSprite.position.copy(position);
+  group.add(labelSprite);
+  labels.push(labelSprite);
+
+  const lineGeometry = new THREE.BufferGeometry();
+  const vertices = new Float32Array([
+    1.8,
+    0,
+    1.3,
+    direction.x,
+    direction.y,
+    direction.z,
+  ]);
+  lineGeometry.setAttribute("position", new THREE.BufferAttribute(vertices, 3));
+  const lineMaterial = new THREE.LineBasicMaterial({ color });
+  const line = new THREE.Line(lineGeometry, lineMaterial);
+  group.add(line);
+  lines.push(line);
+
+  labelSprite.onClick = () => {
+    line.visible = !line.visible; // Toggle line visibility on label click
+  };
+}
+createLabelAndLine(
+  "Speaker",
+  0xffffffff,
+  new THREE.Vector3(1.5, 2.4, 1),
+  new THREE.Vector3(0, 10, 0)
+);
+
+function updateLinePositions() {
+  lines.forEach((line, index) => {
+    const labelPosition = labels[index].position;
+    line.geometry.attributes.position.array[3] = labelPosition.x;
+    line.geometry.attributes.position.array[4] = labelPosition.y;
+    line.geometry.attributes.position.array[5] = labelPosition.z;
+    line.geometry.attributes.position.needsUpdate = true;
+  });
+}
 
 const pointLight = new THREE.PointLight(0xffffff);
 pointLight.position.set(1, 1, 3);
@@ -72,6 +123,8 @@ function animate() {
   // torus.rotation.x += 0.01;
   // torus.rotation.y += 0.01;
   // torus.rotation.z += 0.01;
+  updateLinePositions();
+
   renderer.render(scene, camera);
 }
 
