@@ -120,9 +120,6 @@ const controls = new OrbitControls(camera, renderer.domElement);
 camera.position.z = 5;
 function animate() {
   requestAnimationFrame(animate);
-  // torus.rotation.x += 0.01;
-  // torus.rotation.y += 0.01;
-  // torus.rotation.z += 0.01;
   updateLinePositions();
 
   renderer.render(scene, camera);
